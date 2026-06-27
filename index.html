@@ -10,6 +10,7 @@
     <link rel="apple-touch-icon" href="https://iili.io/fj31YHN.md.png">
     <link rel="icon" href="https://iili.io/fj31YHN.md.png">
 <style>
+/* نفس الأنماط السابقة، لم تتغير */
 :root {
     --primary: #ff6600;
     --dark: #121212;
@@ -725,7 +726,7 @@ body {
 // ============================
 // CONFIG - ضع هنا رابط السيرفر
 // ============================
-const MENU_API_URL = 'https://script.google.com/macros/s/AKfycbw_-ElaqxlIaBvR8NNgz6wnGnuVtbz1P4uPf0S1Zj4ATl1SNpZfClkwoRmzEbyPaH8u/exec';
+const MENU_API_URL = 'https://script.google.com/macros/s/AKfycbxYkCyMxql8-n2NghjgjfbVSkd0NDSr6TPxc7xrCwg7cFoNjHDD8jAmZH_PM1aKt8oB/exec';
 
 // ============================
 // STATE
@@ -1077,6 +1078,9 @@ function populateCategorySelect(selected = null) {
     });
 }
 
+// ============================
+// SAVE ITEM (FIXED - RELOAD MENU ALWAYS)
+// ============================
 async function saveItem() {
     const name        = document.getElementById('item-name').value.trim();
     const price       = document.getElementById('item-price').value;
@@ -1101,6 +1105,7 @@ async function saveItem() {
         if (result.result === 'success') {
             toast(editingId ? 'تم تحديث الصنف بنجاح ✅' : 'تم إضافة الصنف بنجاح ✅', 'success');
             closeModal('item-modal');
+            // إعادة تحميل القائمة بالكامل لضمان التزامن التام مع قاعدة البيانات
             await loadMenu();
         } else {
             toast('خطأ: ' + (result.message || 'فشل الحفظ'), 'error');
@@ -1175,20 +1180,17 @@ function confirmDeleteCategory(catName) {
 }
 
 // ============================
-// TOGGLE AVAILABILITY
+// TOGGLE AVAILABILITY (FIXED - RELOAD MENU)
 // ============================
 async function toggleAvailability(id, checkbox) {
-    const item = allItems.find(i => i.id == id);
     const newState = checkbox.checked;
 
     try {
         const res = await apiPost({ action: 'toggleAvailability', id });
         if (res.result === 'success') {
-            if (item) item.available = res.available;
-            const card = document.getElementById('card-' + id);
-            if (card) card.classList.toggle('unavailable', !res.available);
+            // إعادة تحميل القائمة بالكامل للحصول على الحالة المحدثة
+            await loadMenu();
             toast(res.available ? 'تم تفعيل الصنف ✅' : 'تم إيقاف الصنف ⛔', res.available ? 'success' : 'info');
-            updateStats();
         } else {
             checkbox.checked = !newState;
             toast('فشل التحديث', 'error');
